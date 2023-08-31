@@ -20,8 +20,8 @@ def fit_config(server_round: int):
     local epoch, increase to two local epochs afterwards.
     """
     config = {
-        "batch_size": 16,
-        "local_epochs": 1 if server_round < 2 else 2,
+        "batch_size": 8,
+        "local_epochs": 1 if server_round < 2 else 1,
     }
     return config
 
@@ -33,7 +33,7 @@ def evaluate_config(server_round: int):
     batches) during rounds one to three, then increase to ten local
     evaluation steps.
     """
-    val_steps = 5 if server_round < 4 else 10
+    val_steps = 2 if server_round < 4 else 2
     return {"val_steps": val_steps}
 
 
@@ -51,7 +51,7 @@ def get_evaluate_fn(model: torch.nn.Module, toy: bool):
         # Use the last 5k training examples as a validation set
         valset = torch.utils.data.Subset(trainset, range(n_train - 5000, n_train))
 
-    valLoader = DataLoader(valset, batch_size=16)
+    valLoader = DataLoader(valset, batch_size=8)
 
     # The `evaluate` function will be called after every round
     def evaluate(
@@ -97,9 +97,9 @@ def main():
     strategy = fl.server.strategy.FedAvg(
         fraction_fit=1.0,
         fraction_evaluate=1.0,
-        min_fit_clients=2,
-        min_evaluate_clients=2,
-        min_available_clients=2,
+        min_fit_clients=1,
+        min_evaluate_clients=1,
+        min_available_clients=1,
         evaluate_fn=get_evaluate_fn(model, args.toy),
         on_fit_config_fn=fit_config,
         on_evaluate_config_fn=evaluate_config,

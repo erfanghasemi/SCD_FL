@@ -67,7 +67,7 @@ class CifarClient(fl.client.NumPyClient):
         steps: int = config["val_steps"]
 
         # Evaluate global model parameters on the local test data and return results
-        testloader = DataLoader(self.testset, batch_size=16)
+        testloader = DataLoader(self.testset, batch_size=8)
 
         loss, accuracy = utils.test(model, testloader, steps, self.device)
         return float(loss), len(self.testset), {"accuracy": float(accuracy)}
@@ -146,7 +146,7 @@ def main() -> None:
         # Start Flower client
         client = CifarClient(trainset, testset, device)
 
-        fl.client.start_numpy_client(server_address="98.98.166.178:8080", client=client)
+        fl.client.start_numpy_client(server_address="130.185.74.117:8080", client=client)
 
 
 if __name__ == "__main__":
