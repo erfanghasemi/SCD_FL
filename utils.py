@@ -3,6 +3,9 @@ import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
 import platform
 import torch.nn as nn
+import json
+import os
+from PIL import Image
 
 import warnings
 
@@ -10,8 +13,70 @@ warnings.filterwarnings("ignore")
 
 # DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-MODEL_PATH_LINUX = "./models/model_v0.pth"
-MODEL_PATH_WINDOWS = "models\model_v0.pth"
+MODEL_PATH_LINUX = "./checkpoints/Model_Checkpoint_Version_0.pth"
+MODEL_PATH_WINDOWS = "checkpoints\Model_Checkpoint_Version_0.pth"
+JSON_PATH = "lesions_dataset\json_lesions.json"
+
+
+# Define a function to preprocess input data
+def preprocess_input(image_path):
+    transform = transforms.Compose([
+        transforms.Resize(1024),
+        transforms.CenterCrop(750),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+    image = Image.open(image_path)
+    image = transform(image).unsqueeze(0)  # Add a batch dimension
+    return image
+
+
+# Function to get predicted label
+def get_predicted_label(output_tensor, class_idx):
+    _, predicted_idx = output_tensor.max(1)
+    predicted_label = class_idx[str(predicted_idx.item())][1]
+    return predicted_label
+
+
+def inference(model, image_path):
+    # Load the class index mapping from the JSON file
+    with open(JSON_PATH) as f:
+        class_idx = json.load(f)
+
+    input_image = preprocess_input(image_path)
+    # Perform inference
+    with torch.no_grad():
+        output = model(input_image)
+
+    # Get and print predicted label
+    predicted_label = get_predicted_label(output, class_idx)
+    return predicted_label
+
+
+def prediction(self, parameters, image_path):
+    # """Evaluate parameters on the locally held test set."""
+    # Update local model parameters
+    model = self.set_parameters(parameters)
+
+    # Evaluate global model parameters on the local test data and return results
+    predicted_label = inference(model, image_path)
+    print(f"Predicted Label: {predicted_label}")
+
+
+def save_checkpoint(model, save_path):
+    os.chdir(save_path)
+    last_version = os.listdir()[-1].split('_')[-1].split('.')[0]
+    model_checkpoint_filename = "Model" + "_" + "Checkpoint" + "_" + "Version" + "_" + str(int(last_version)+1) + ".pth"
+    torch.save(model, model_checkpoint_filename)
+    print("\n {} is saved in path: {}\n".format(model_checkpoint_filename, os.path.join(save_model, model_checkpoint_filename)))
+
+
+def load_checkpoint(checkpoints_path):
+    os.chdir(checkpoints_path)
+    last_checkpoint = os.listdir()[-1]
+    model = torch.load(last_checkpoint)
+    return model
+
 
 def load_data():
     """Load CIFAR-10 (training and test set)."""

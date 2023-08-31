@@ -9,6 +9,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 LAYERS_COUNT = 3
+SAVE_PATH = "checkpoints"
 
 class CifarClient(fl.client.NumPyClient):
     def __init__(
@@ -29,6 +30,7 @@ class CifarClient(fl.client.NumPyClient):
         params_dict = zip(model.state_dict().keys(), parameters)
         state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
         model.load_state_dict(state_dict, strict=True)
+        utils.save_checkpoint(model, SAVE_PATH)
         return model
 
     def fit(self, parameters, config):
@@ -36,7 +38,6 @@ class CifarClient(fl.client.NumPyClient):
 
         # Update local model parameters
         model = self.set_parameters(parameters)
-
         # Get hyperparameters for this round
         batch_size: int = config["batch_size"]
         epochs: int = config["local_epochs"]
@@ -119,13 +120,13 @@ def main() -> None:
         help="Set to true to quicky run the client using only 10 datasamples. \
         Useful for testing purposes. Default: False",
     )
-    # parser.add_argument(
-    #     "--use_cuda",
-    #     type=bool,
-    #     default=False,
-    #     required=False,
-    #     help="Set to true to use GPU. Default: False",
-    # )
+    parser.add_argument(
+        "--use_cuda",
+        type=bool,
+        default=False,
+        required=False,
+        help="Set to true to use GPU. Default: False",
+    )
 
     args = parser.parse_args()
 
