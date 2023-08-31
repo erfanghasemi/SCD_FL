@@ -35,14 +35,10 @@ def load_data():
     else:
         print("Unsupported operating system detected.")
 
+    num_examples = {"trainset": len(trainset), "testset": len(testset)}
+    return trainset, testset, num_examples
 
-    # trainset = CIFAR10("./dataset", train=True, download=True, transform=transform)
-    # testset = CIFAR10(".\lesions_dataset\FL_Test_Dataset", train=False, download=True, transform=transform)
 
-    # num_examples = {"trainset": len(trainset), "testset": len(testset)}
-    # return trainset, testset, num_examples
-
-load_data()
 def load_partition(idx: int):
     """Load 1/10th of the training and test data to simulate a partition."""
     assert idx in range(10)
