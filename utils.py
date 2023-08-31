@@ -155,7 +155,7 @@ def load_model():
     if system_platform == "Linux":
         # Further check if it's Linux
         model = torch.load(MODEL_PATH_LINUX)
-        print("Model are correctly loaded for Linux")
+        print("Model are correctly loaded for Linux", map_location=torch.device('cpu'))
     elif system_platform == "Windows":
         model = torch.load(MODEL_PATH_WINDOWS, map_location=torch.device('cpu'))
         print("Model are correctly loaded for Windows")
