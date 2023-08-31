@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import flwr as fl
 import torch
 
-import utils
+import utils as utils
 
 import warnings
 

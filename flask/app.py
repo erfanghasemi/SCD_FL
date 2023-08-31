@@ -1,41 +1,42 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 import os
 import sys
 
-sys.path.append('../')
+sys.path.append('..')
 import utils
 import torch
 
 app = Flask(__name__)
-CHECKPOINTS_PATH = "checkpoints"
+CHECKPOINTS_PATH = "..\checkpoints"
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# Define the directory where uploaded images will be stored
-UPLOAD_FOLDER = 'uploads'
+
+UPLOAD_FOLDER = r'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-@app.route('/')
+model = utils.load_checkpoint(CHECKPOINTS_PATH, str(DEVICE)) 
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('upload.html')
+    if request.method == 'POST':
+        if 'image' not in request.files:
+            return redirect(request.url)
 
-@app.route('/upload', methods=['POST'])
-def upload_image():
-    if 'image' not in request.files:
-        return redirect(request.url)
-    
-    image = request.files['image']
+        image = request.files['image']
 
-    # If the user does not select a file, the browser submits an empty file without a filename.
-    if image.filename == '':
-        return redirect(request.url)
+        if image.filename == '':
+            return redirect(request.url)
+        if image:
+            # filename = os.path.join(app.config['UPLOAD_FOLDER'], image.filename)
+            filename = app.config['UPLOAD_FOLDER'] + "/" + image.filename
+            image.save(filename)
+            print(filename)
+            results = utils.inference(model, filename)
+            print(results)
+            # results = "nevus"
+            return render_template('index.html', image_filename=image.filename, results=results)
 
-    # Save the uploaded image to the specified directory
-    if image:
-        filename = os.path.join(app.config['UPLOAD_FOLDER'], image.filename)
-        image.save(filename)
-        model = utils.load_checkpoint(CHECKPOINTS_PATH, str(DEVICE)) 
-        utils.inference(model, image_path)
-        return 'Image uploaded successfully'
+    return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

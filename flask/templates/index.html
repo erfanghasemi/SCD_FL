@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Detection Web App</title>
+</head>
+<body>
+    <h1>Image Detection Web App</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="image">
+        <input type="submit" value="Detect">
+    </form>
+
+    {% if image_filename %}
+    <h2>Uploaded Image:</h2>
+    <img src="{{ url_for('static', filename='uploads/' + image_filename) }}" alt="Uploaded Image">
+
+    <h2>Results:{{ results }}</h2>
+    <!-- <ul>
+        <li></li>
+    </ul> -->
+    {% endif %}
+</body>
+</html>

@@ -1,4 +1,4 @@
-import utils
+import utils as utils
 from torch.utils.data import DataLoader
 import torchvision.datasets
 import torch
