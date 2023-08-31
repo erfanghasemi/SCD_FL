@@ -2,6 +2,7 @@ import torch
 import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
 import platform
+import torch.nn as nn
 
 import warnings
 
@@ -29,11 +30,11 @@ def load_data():
         # Further check if it's Linux
         trainset = ImageFolder(root='./lesions_dataset/FL_Training_Dataset', transform=transform)
         testset = ImageFolder(root='./lesions_dataset/FL_Training_Dataset', transform=transform)
-        print("Addresses are correct for Linux sysfile")
+        # print("Addresses are correct for Linux sysfile")
     elif system_platform == "Windows":
         trainset = ImageFolder(root='lesions_dataset\FL_Training_Dataset', transform=transform)
         testset = ImageFolder(root='lesions_dataset\FL_Test_Dataset', transform=transform)
-        print("Addresses are correct for Windows sysfile")
+        # print("Addresses are correct for Windows sysfile")
     else:
         print("Unsupported operating system detected.")
 
@@ -140,20 +141,20 @@ def test(net, testloader, steps: int = None, device: str = "cpu"):
 
 
 
-def replace_classifying_layer(model, layer_count: int = 4):
+def unfreeze_classifying_layer(model, layer_count: int = 3):
     """Unfreeze the final layer of the classifier."""
     for param in model.parameters():
         param.requires_grad = False
 
     all_layers = list(model.children())
     num_layers = len(all_layers)
-    last_three_layers = nn.Sequential(*all_layers[num_layers - 3:])
+    last_three_layers = nn.Sequential(*all_layers[num_layers - layer_count:])
 
     for param in last_three_layers.parameters():
         param.requires_grad = True
 
 
-def load_model(layer_count: int = None):
+def load_model(layer_count: int = 3):
     
     # Get the system's platform information
     system_platform = platform.system()
@@ -162,17 +163,16 @@ def load_model(layer_count: int = None):
     if system_platform == "Linux":
         # Further check if it's Linux
         model = torch.load(MODEL_PATH_LINUX, map_location=torch.device('cpu'))
-        print("Model are correctly loaded for Linux")
+        # print("Model are correctly loaded for Linux")
     elif system_platform == "Windows":
         model = torch.load(MODEL_PATH_WINDOWS, map_location=torch.device('cpu'))
-        print("Model are correctly loaded for Windows")
+        # print("Model are correctly loaded for Windows")
     else:
         print("Unsupported operating system detected.")
 
-    replace_classifying_layer(model, layer_count)
+    unfreeze_classifying_layer(model, layer_count)
     return model
 
-load_model()
 def get_model_params(model):
     """Returns a model's parameters."""
     return [val.cpu().numpy() for _, val in model.state_dict().items()]

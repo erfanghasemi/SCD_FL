@@ -11,7 +11,7 @@ import utils
 import warnings
 
 warnings.filterwarnings("ignore")
-
+LAYERS_COUNT = 3
 
 def fit_config(server_round: int):
     """Return training configuration dict for each round.
@@ -89,7 +89,7 @@ def main():
 
     args = parser.parse_args()
 
-    model = utils.load_efficientnet(classes=10)
+    model = utils.load_model(layer_count=LAYER_COUNT)
 
     model_parameters = [val.cpu().numpy() for _, val in model.state_dict().items()]
 

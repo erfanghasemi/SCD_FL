@@ -8,7 +8,7 @@ from collections import OrderedDict
 import warnings
 
 warnings.filterwarnings("ignore")
-
+LAYERS_COUNT = 3
 
 class CifarClient(fl.client.NumPyClient):
     def __init__(
@@ -22,11 +22,10 @@ class CifarClient(fl.client.NumPyClient):
         self.trainset = trainset
         self.testset = testset
         self.validation_split = validation_split
-
     def set_parameters(self, parameters):
-        """Loads a efficientnet model and replaces it parameters with the ones
+        """Loads a GoogleNet model and replaces it parameters with the ones
         given."""
-        model = utils.load_efficientnet(classes=10)
+        model = utils.load_model(layer_count=LAYERS_COUNT)
         params_dict = zip(model.state_dict().keys(), parameters)
         state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
         model.load_state_dict(state_dict, strict=True)
@@ -78,7 +77,7 @@ def client_dry_run(device: str = "cpu"):
     """Weak tests to check whether all client methods are working as
     expected."""
 
-    model = utils.load_efficientnet(classes=10)
+    model = utils.load_model(layer_count=LAYERS_COUNT)
     trainset, testset = utils.load_partition(0)
     trainset = torch.utils.data.Subset(trainset, range(10))
     testset = torch.utils.data.Subset(testset, range(10))
@@ -120,13 +119,13 @@ def main() -> None:
         help="Set to true to quicky run the client using only 10 datasamples. \
         Useful for testing purposes. Default: False",
     )
-    parser.add_argument(
-        "--use_cuda",
-        type=bool,
-        default=False,
-        required=False,
-        help="Set to true to use GPU. Default: False",
-    )
+    # parser.add_argument(
+    #     "--use_cuda",
+    #     type=bool,
+    #     default=False,
+    #     required=False,
+    #     help="Set to true to use GPU. Default: False",
+    # )
 
     args = parser.parse_args()
 
