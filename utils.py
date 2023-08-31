@@ -9,6 +9,8 @@ warnings.filterwarnings("ignore")
 
 # DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+MODEL_PATH_LINUX = "./models/model_v0.pth"
+MODEL_PATH_WINDOWS = "models\model_v0.pth"
 
 def load_data():
     """Load CIFAR-10 (training and test set)."""
@@ -144,30 +146,27 @@ def replace_classifying_layer(efficientnet_model, num_classes: int = 10):
     efficientnet_model.classifier.fc = torch.nn.Linear(num_features, num_classes)
 
 
-def load_efficientnet(entrypoint: str = "nvidia_efficientnet_b0", classes: int = None):
-    """Loads pretrained efficientnet model from torch hub. Replaces final
-    classifying layer if classes is specified.
+def load_model():
 
-    Args:
-        entrypoint: EfficientNet model to download.
-                    For supported entrypoints, please refer
-                    https://pytorch.org/hub/nvidia_deeplearningexamples_efficientnet/
-        classes: Number of classes in final classifying layer. Leave as None to get the downloaded
-                 model untouched.
-    Returns:
-        EfficientNet Model
+    # Get the system's platform information
+    system_platform = platform.system()
 
-    Note: One alternative implementation can be found at https://github.com/lukemelas/EfficientNet-PyTorch
-    """
-    efficientnet = torch.hub.load(
-        "NVIDIA/DeepLearningExamples:torchhub", entrypoint, pretrained=True
-    )
+    # Check if it's Ubuntu
+    if system_platform == "Linux":
+        # Further check if it's Linux
+        model = torch.load(MODEL_PATH_LINUX, map_location=torch.device('cpu'))
+        print("Model are correctly loaded for Linux")
+    elif system_platform == "Windows":
+        model = torch.load(MODEL_PATH_WINDOWS, map_location=torch.device('cpu'))
+        print("Model are correctly loaded for Windows")
+    else:
+        print("Unsupported operating system detected.")
 
-    if classes is not None:
-        replace_classifying_layer(efficientnet, classes)
-    return efficientnet
+    # if classes is not None:
+    #     replace_classifying_layer(efficientnet, classes)
+    # return efficientnet
 
-
+load_model()
 def get_model_params(model):
     """Returns a model's parameters."""
     return [val.cpu().numpy() for _, val in model.state_dict().items()]
