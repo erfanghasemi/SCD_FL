@@ -9,7 +9,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 LAYERS_COUNT = 3
-SAVE_PATH = "checkpoints"
+CHECKPOINTS_PATH = "checkpoints"
 
 class CifarClient(fl.client.NumPyClient):
     def __init__(
@@ -30,7 +30,7 @@ class CifarClient(fl.client.NumPyClient):
         params_dict = zip(model.state_dict().keys(), parameters)
         state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
         model.load_state_dict(state_dict, strict=True)
-        utils.save_checkpoint(model, SAVE_PATH)
+        utils.save_checkpoint(model, CHECKPOINTS_PATH)
         return model
 
     def fit(self, parameters, config):
@@ -148,7 +148,9 @@ def main() -> None:
         client = CifarClient(trainset, testset, device)
 
         fl.client.start_numpy_client(server_address="130.185.74.117:8080", client=client)
+        
 
 
 if __name__ == "__main__":
     main()
+    utils.remove_checkpoints(CHECKPOINTS_PATH)

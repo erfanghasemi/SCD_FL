@@ -53,22 +53,21 @@ def inference(model, image_path):
     return predicted_label
 
 
-def prediction(self, parameters, image_path):
+def prediction(model, image_path):
     # """Evaluate parameters on the locally held test set."""
     # Update local model parameters
-    model = self.set_parameters(parameters)
-
     # Evaluate global model parameters on the local test data and return results
     predicted_label = inference(model, image_path)
     print(f"Predicted Label: {predicted_label}")
 
 
 def save_checkpoint(model, save_path):
-    os.chdir(save_path)
-    last_version = os.listdir()[-1].split('_')[-1].split('.')[0]
+    # os.chdir(save_path)
+    last_version = os.listdir(save_path)[-1].split('_')[-1].split('.')[0]
     model_checkpoint_filename = "Model" + "_" + "Checkpoint" + "_" + "Version" + "_" + str(int(last_version)+1) + ".pth"
-    torch.save(model, model_checkpoint_filename)
-    print("\n {} is saved in path: {}\n".format(model_checkpoint_filename, os.path.join(save_path, model_checkpoint_filename)))
+    save_path = os.path.join(save_path, model_checkpoint_filename)
+    torch.save(model, save_path)
+    print("\n checkpoint is saved - path: {}\n".format(save_path))
 
 
 def load_checkpoint(checkpoints_path):
@@ -76,6 +75,14 @@ def load_checkpoint(checkpoints_path):
     last_checkpoint = os.listdir()[-1]
     model = torch.load(last_checkpoint)
     return model
+
+
+def remove_checkpoints(checkponints_path):
+    checkpoints = [os.path.join(checkponints_path ,filename) for filename in os.listdir(checkponints_path)]
+                   
+    for checkpoint_file in checkpoints[1:]:
+        os.remove(checkpoint_file) 
+    print("Extra checkpoints were removed.")
 
 
 def load_data():
@@ -94,7 +101,7 @@ def load_data():
     if system_platform == "Linux":
         # Further check if it's Linux
         trainset = ImageFolder(root='./lesions_dataset/FL_Training_Dataset', transform=transform)
-        testset = ImageFolder(root='./lesions_dataset/FL_Training_Dataset', transform=transform)
+        testset = ImageFolder(root='./lesions_dataset/FL_Test_Dataset', transform=transform)
         # print("Addresses are correct for Linux sysfile")
     elif system_platform == "Windows":
         trainset = ImageFolder(root='lesions_dataset\FL_Training_Dataset', transform=transform)
