@@ -12,28 +12,26 @@ warnings.filterwarnings("ignore")
 
 def load_data():
     """Load CIFAR-10 (training and test set)."""
-    transform = transforms.Compose(
-        [
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-    )
+    transform = transforms.Compose([
+        transforms.Resize(1024),
+        transforms.CenterCrop(750),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
 
     # Get the system's platform information
     system_platform = platform.system()
 
     # Check if it's Ubuntu
     if system_platform == "Linux":
-        # Further check if it's Ubuntu
-        # distribution = platform.linux_distribution()
-        # if "Linux":
-        print("Linux detected.")
-        # else:
-        #     print("Linux distribution other than Ubuntu detected.")
+        # Further check if it's Linux
+        # trainset = CIFAR10("./dataset", train=True, download=True, transform=transform)
+        # testset = CIFAR10(".\lesions_dataset\FL_Test_Dataset", train=False, download=True, transform=transform)
+        pass
     elif system_platform == "Windows":
-        print("Windows detected.")
+        # trainset = CIFAR10("./dataset", train=True, download=True, transform=transform)
+        # testset = CIFAR10(".\lesions_dataset\FL_Test_Dataset", train=False, download=True, transform=transform)
+        pass
     else:
         print("Unsupported operating system detected.")
 
