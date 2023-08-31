@@ -140,14 +140,21 @@ def test(net, testloader, steps: int = None, device: str = "cpu"):
 
 
 
-def replace_classifying_layer(efficientnet_model, num_classes: int = 10):
-    """Replaces the final layer of the classifier."""
-    num_features = efficientnet_model.classifier.fc.in_features
-    efficientnet_model.classifier.fc = torch.nn.Linear(num_features, num_classes)
+def replace_classifying_layer(model, layer_count: int = 4):
+    """Unfreeze the final layer of the classifier."""
+    for param in model.parameters():
+        param.requires_grad = False
+
+    all_layers = list(model.children())
+    num_layers = len(all_layers)
+    last_three_layers = nn.Sequential(*all_layers[num_layers - 3:])
+
+    for param in last_three_layers.parameters():
+        param.requires_grad = True
 
 
-def load_model():
-
+def load_model(layer_count: int = None):
+    
     # Get the system's platform information
     system_platform = platform.system()
 
@@ -162,9 +169,8 @@ def load_model():
     else:
         print("Unsupported operating system detected.")
 
-    # if classes is not None:
-    #     replace_classifying_layer(efficientnet, classes)
-    # return efficientnet
+    replace_classifying_layer(model, layer_count)
+    return model
 
 load_model()
 def get_model_params(model):
