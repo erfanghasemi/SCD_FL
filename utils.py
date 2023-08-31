@@ -40,6 +40,7 @@ def get_predicted_label(output_tensor, class_idx):
 
 def inference(model, image_path):
     # Load the class index mapping from the JSON file
+    
     with open(JSON_PATH) as f:
         class_idx = json.load(f)
 
@@ -48,21 +49,14 @@ def inference(model, image_path):
     with torch.no_grad():
         output = model(input_image)
 
-    # Get and print predicted label
+    # # # Get and print predicted label
     predicted_label = get_predicted_label(output, class_idx)
+    print(f"Predicted Label: {predicted_label}")
+
     return predicted_label
 
 
-def prediction(model, image_path):
-    # """Evaluate parameters on the locally held test set."""
-    # Update local model parameters
-    # Evaluate global model parameters on the local test data and return results
-    predicted_label = inference(model, image_path)
-    print(f"Predicted Label: {predicted_label}")
-
-
 def save_checkpoint(model, save_path):
-    # os.chdir(save_path)
     last_version = os.listdir(save_path)[-1].split('_')[-1].split('.')[0]
     model_checkpoint_filename = "Model" + "_" + "Checkpoint" + "_" + "Version" + "_" + str(int(last_version)+1) + ".pth"
     save_path = os.path.join(save_path, model_checkpoint_filename)
@@ -70,10 +64,17 @@ def save_checkpoint(model, save_path):
     print("\n checkpoint is saved - path: {}\n".format(save_path))
 
 
-def load_checkpoint(checkpoints_path):
-    os.chdir(checkpoints_path)
-    last_checkpoint = os.listdir()[-1]
-    model = torch.load(last_checkpoint)
+def load_checkpoint(checkpoints_path, device):
+    last_checkpoint = os.listdir(checkpoints_path)[-1]
+    checkpoints_path = os.path.join(checkpoints_path, last_checkpoint)
+    if device == "cuda:0":
+        model = torch.load(checkpoints_path)
+        print("Checkpoint version: {}".format(last_checkpoint))
+    elif device == "cpu" :
+        model = torch.load(checkpoints_path, map_location=torch.device('cpu'))
+        print("Checkpoint version: {}".format(last_checkpoint))
+    else:
+        print("Device Type is unknown")
     return model
 
 
