@@ -68,7 +68,7 @@ def save_checkpoint(model, save_path):
     last_version = os.listdir()[-1].split('_')[-1].split('.')[0]
     model_checkpoint_filename = "Model" + "_" + "Checkpoint" + "_" + "Version" + "_" + str(int(last_version)+1) + ".pth"
     torch.save(model, model_checkpoint_filename)
-    print("\n {} is saved in path: {}\n".format(model_checkpoint_filename, os.path.join(save_model, model_checkpoint_filename)))
+    print("\n {} is saved in path: {}\n".format(model_checkpoint_filename, os.path.join(save_path, model_checkpoint_filename)))
 
 
 def load_checkpoint(checkpoints_path):
