@@ -1,6 +1,6 @@
 import torch
 import torchvision.transforms as transforms
-from torchvision.datasets import CIFAR10
+from torchvision.datasets import ImageFolder
 import platform
 
 import warnings
@@ -25,13 +25,13 @@ def load_data():
     # Check if it's Ubuntu
     if system_platform == "Linux":
         # Further check if it's Linux
-        # trainset = CIFAR10("./dataset", train=True, download=True, transform=transform)
-        # testset = CIFAR10(".\lesions_dataset\FL_Test_Dataset", train=False, download=True, transform=transform)
-        pass
+        trainset = ImageFolder(root='./lesions_dataset/FL_Training_Dataset', transform=transform)
+        testset = ImageFolder(root='./lesions_dataset/FL_Training_Dataset', transform=transform)
+        print("Addresses are correct for Linux sysfile")
     elif system_platform == "Windows":
-        # trainset = CIFAR10("./dataset", train=True, download=True, transform=transform)
-        # testset = CIFAR10(".\lesions_dataset\FL_Test_Dataset", train=False, download=True, transform=transform)
-        pass
+        trainset = ImageFolder(root='lesions_dataset\FL_Training_Dataset', transform=transform)
+        testset = ImageFolder(root='lesions_dataset\FL_Test_Dataset', transform=transform)
+        print("Addresses are correct for Windows sysfile")
     else:
         print("Unsupported operating system detected.")
 
