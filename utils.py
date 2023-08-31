@@ -27,11 +27,11 @@ def load_data():
     # Check if it's Ubuntu
     if system_platform == "Linux":
         # Further check if it's Ubuntu
-        distribution = platform.linux_distribution()
-        if "Ubuntu" in distribution:
-            print("Ubuntu detected.")
-        else:
-            print("Linux distribution other than Ubuntu detected.")
+        # distribution = platform.linux_distribution()
+        # if "Linux":
+        print("Linux detected.")
+        # else:
+        #     print("Linux distribution other than Ubuntu detected.")
     elif system_platform == "Windows":
         print("Windows detected.")
     else:
