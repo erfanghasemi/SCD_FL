@@ -1,43 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask & VGG16 Image Classifier</title>
-    
+    <title>Skin Cancer Diagnosis Web App</title>
+
     <!-- Add Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    
+
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-image: url('https://storage.googleapis.com/gweb-uniblog-publish-prod/original_images/derm_-_hero_image_2_1.jpg'); /* Replace with the URL of your background image */
+            background-image: url('https://storage.googleapis.com/gweb-uniblog-publish-prod/original_images/derm_-_hero_image_2_1.jpg');
+            /* Replace with the URL of your background image */
             background-size: cover;
             background-repeat: no-repeat;
-            color: #fff; /* Light text color */
-            margin: 0; /* Remove default margin */
-            padding: 0; /* Remove default padding */
+            color: #fff;
+            /* Light text color */
+            margin: 0;
+            /* Remove default margin */
+            padding: 0;
+            /* Remove default padding */
         }
 
         .container {
             text-align: center;
-            padding: 20px; /* Add padding to create space around the content */
-            min-height: 100vh; /* Reduce container height to 80% of viewport height */
+            padding: 20px;
+            /* Add padding to create space around the content */
+            min-height: 100vh;
+            /* Reduce container height to 80% of viewport height */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background-color: rgba(0, 0, 0, 0.7); /* Add a semi-transparent black overlay to improve readability */
+            background-color: rgba(0, 0, 0, 0.7);
+            /* Add a semi-transparent black overlay to improve readability */
         }
 
         .card {
             border: none;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            background-color: #1e1e1e; /* Dark card background color */
-            color: #fff; /* Light text color for the card */
+            background-color: #1e1e1e;
+            /* Dark card background color */
+            color: #fff;
+            /* Light text color for the card */
             padding: 20px;
             border-radius: 10px;
-            max-width: 500px; /* Limit card width */
+            max-width: 500px;
+            /* Limit card width */
         }
 
         .custom-file-input {
@@ -46,8 +57,10 @@
 
         .custom-file-label {
             cursor: pointer;
-            padding: 8px 16px; /* Smaller padding */
-            font-size: 18px; /* Slightly smaller font size */
+            padding: 8px 16px;
+            /* Smaller padding */
+            font-size: 18px;
+            /* Slightly smaller font size */
             background-color: #3498db;
             border: none;
             border-radius: 5px;
@@ -61,75 +74,87 @@
         img {
             max-width: 100%;
             height: auto;
-            border: 2px solid #fff; /* Light border color */
+            border: 2px solid #fff;
+            /* Light border color */
             border-radius: 5px;
             margin-top: 20px;
         }
 
         input[type="submit"] {
-            background-color: #e74c3c; /* Red button color */
+            background-color: #e74c3c;
+            /* Red button color */
             border: none;
             border-radius: 5px;
             color: #fff;
             cursor: pointer;
-            font-size: 20px; /* Larger font size */
-            padding: 8px 16px; /* Smaller padding */
+            font-size: 20px;
+            /* Larger font size */
+            padding: 8px 16px;
+            /* Smaller padding */
             margin-top: 20px;
         }
-        
+
         input[type="submit"]:hover {
-            background-color: #c0392b; /* Hover color */
+            background-color: #c0392b;
+            /* Hover color */
         }
 
         /* Larger text size for labels and accuracy text */
         .label-text {
-            font-size: 28px; /* Larger font size */
+            font-size: 22px;
+            /* Larger font size */
         }
 
         .accuracy-text {
-            font-size: 24px; /* Larger font size */
+            font-size: 20px;
+            /* Larger font size */
         }
 
         /* Dropdown styling */
         select.form-control {
-            font-size: 20px; /* Larger font size */
+            font-size: 20px;
+            /* Larger font size */
             margin-top: 20px;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="card">
-            <h2 class="card-title">Flask & VGG16 Image Classifier</h2>
+            <h2 class="card-title">Upload Dermoscopic Image</h2>
             <form method="post" action="/" enctype="multipart/form-data">
                 <div class="custom-file">
                     <input type="file" class="custom-file-input" id="file" name="file" autocomplete="off" required>
-                    <label class="custom-file-label" for="file">Select file</label>
+                    <label class="custom-file-label" for="file">Select Image</label>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block mt-3">Submit</button>
             </form>
             {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    <div class="mt-4">
-                        <p class="label-text">Label: {{ messages[0] }}</p>
-                        <p class="accuracy-text">Accuracy: {{ messages[1] }}</p>
-                        <img src="{{ messages[2] }}" alt="Image Description" class="img-fluid rounded mt-3">
-                    </div>
-                    <div class="mt-4">
-                        <h3>Checkpoint Form</h3>
-                        <form method="post" action="/checkpoint">
-                            <select class="form-control" name="choice">
-                                <option value="choice1">Choice 1</option>
-                                <option value="choice2">Choice 2</option>
-                                <option value="choice3">Choice 3</option>
-                                <option value="choice4">Choice 4</option>
-                            </select>
-                            <button type="submit" class="btn btn-danger btn-block mt-3">Submit Checkpoint</button>
-                        </form>
-                    </div>
-                {% endif %}
+            {% if messages %}
+            <div class="mt-4">
+                <p class="label-text">AI Diagnosis: {{ messages[0] }}</p>
+                <!-- <p class="accuracy-text">Accuracy: {{ messages[1] }}</p> -->
+                <img src="{{ messages[2] }}" alt="Image Description" class="img-fluid rounded mt-3">
+            </div>
+            <!-- Add this HTML code inside the <div class="container"> in your index.html file -->
+            <div class="mt-4">
+                <h3> Select the actual disease</h3>
+                <form method="post" action="{{ url_for('submit_checkpoint', filename=messages[3]) }}">
+                    <select class="form-control" name="choice">
+                        <option value="unknown">Unknown</option>
+                        <option value="melanoma">Melanoma</option>
+                        <option value="basal cell carcinoma">Basal Cell Carcinoma</option>
+                        <option value="nevus">Nevus</option>
+                        <!-- Add more options as needed -->
+                    </select>
+                    <button type="submit" class="btn btn-danger btn-block mt-3">Submit Checkpoint</button>
+                </form>
+            </div>
+            {% endif %}
             {% endwith %}
         </div>
     </div>
 </body>
+
 </html>

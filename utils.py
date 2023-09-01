@@ -40,7 +40,6 @@ def get_predicted_label(output_tensor, class_idx):
 
 def inference(model, image_path):
     # Load the class index mapping from the JSON file
-    # os.chdir("/")
     dir_path = os.path.dirname(os.path.realpath(__file__))
     json_abs_path = os.path.join(dir_path, JSON_PATH)
     with open(json_abs_path) as f:

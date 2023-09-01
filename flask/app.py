@@ -6,6 +6,7 @@ import sys
 sys.path.append('..')
 import utils
 import torch
+from shutil import copy, move
 
 
 app = Flask(__name__)
@@ -33,14 +34,34 @@ def submit_file():
             flash('No file selected for uploading')
             return redirect(request.url)
         if file:
-            filename = app.config['UPLOAD_FOLDER'] + "/" + file.filename
-            file.save(filename)
+            file_path = app.config['UPLOAD_FOLDER'] + "/" + file.filename
+            file.save(file_path)
             model = utils.load_checkpoint(CHECKPOINTS_PATH, str(DEVICE)) 
-            prediction_disease = utils.inference(model, filename)
+            prediction_disease = utils.inference(model, file_path)
             flash(prediction_disease)
             flash(0.1)
-            flash(filename)
+            flash(file_path)
+            flash(file.filename)
             return redirect('/')
+
+
+@app.route('/checkpoint/<filename>', methods=['POST'])
+def submit_checkpoint(filename):
+    if request.method == 'POST':
+        choice = request.form['choice']
+        
+        upload_path = r"..\flask\static\uploads"
+        training_path = r"..\lesions_dataset\FL_Training_Dataset"
+        
+        # Handle the checkpoint submission based on the 'choice' value
+        if choice == "unknown":
+            redirect('/')
+        file_path = os.path.join(upload_path, filename)
+        dst_path = os.path.join(training_path, choice)
+        move(file_path, dst_path)
+        print("{} moved tp {} folder in Traning".format(filename, choice))
+        
+        return redirect('/')
 
 
 if __name__ == "__main__":
