@@ -1,42 +1,47 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, flash, url_for
+import urllib.request
 import os
-import sys
 
+import sys
 sys.path.append('..')
 import utils
 import torch
 
+
 app = Flask(__name__)
+app.secret_key = "super secret key"
+
 CHECKPOINTS_PATH = "..\checkpoints"
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 UPLOAD_FOLDER = r'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-model = utils.load_checkpoint(CHECKPOINTS_PATH, str(DEVICE)) 
-
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def index():
-    if request.method == 'POST':
-        if 'image' not in request.files:
-            return redirect(request.url)
-
-        image = request.files['image']
-
-        if image.filename == '':
-            return redirect(request.url)
-        if image:
-            # filename = os.path.join(app.config['UPLOAD_FOLDER'], image.filename)
-            filename = app.config['UPLOAD_FOLDER'] + "/" + image.filename
-            image.save(filename)
-            print(filename)
-            results = utils.inference(model, filename)
-            print(results)
-            # results = "nevus"
-            return render_template('index.html', image_filename=image.filename, results=results)
-
     return render_template('index.html')
 
-if __name__ == '__main__':
-    app.run(debug=True)
+
+@app.route('/', methods=['POST'])
+def submit_file():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected for uploading')
+            return redirect(request.url)
+        if file:
+            filename = app.config['UPLOAD_FOLDER'] + "/" + file.filename
+            file.save(filename)
+            model = utils.load_checkpoint(CHECKPOINTS_PATH, str(DEVICE)) 
+            prediction_disease = utils.inference(model, filename)
+            flash(prediction_disease)
+            flash(0.1)
+            flash(filename)
+            return redirect('/')
+
+
+if __name__ == "__main__":
+    app.run()
