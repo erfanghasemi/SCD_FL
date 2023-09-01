@@ -6,7 +6,7 @@ import sys
 sys.path.append('..')
 import utils
 import torch
-from shutil import copy, move
+from shutil import move
 
 
 app = Flask(__name__)
@@ -34,14 +34,18 @@ def submit_file():
             flash('No file selected for uploading')
             return redirect(request.url)
         if file:
-            file_path = app.config['UPLOAD_FOLDER'] + "/" + file.filename
-            file.save(file_path)
-            model = utils.load_checkpoint(CHECKPOINTS_PATH, str(DEVICE)) 
-            prediction_disease = utils.inference(model, file_path)
-            flash(prediction_disease)
-            flash(0.1)
-            flash(file_path)
-            flash(file.filename)
+            allowed_extensions = {'jpg', 'jpeg'}
+            if '.' in file.filename and file.filename.rsplit('.', 1)[1].lower() in allowed_extensions:
+                file_path = app.config['UPLOAD_FOLDER'] + "/" + file.filename 
+                file.save(file_path)
+                model = utils.load_checkpoint(CHECKPOINTS_PATH, str(DEVICE)) 
+                prediction_disease = utils.inference(model, file_path)
+                flash(prediction_disease)
+                flash(0.1)
+                flash(file_path)
+                flash(file.filename)
+            else:
+                flash('Invalid file format. Allowed formats: jpg, jpeg, png')
             return redirect('/')
 
 
@@ -49,17 +53,23 @@ def submit_file():
 def submit_checkpoint(filename):
     if request.method == 'POST':
         choice = request.form['choice']
-        
         upload_path = r"..\flask\static\uploads"
         training_path = r"..\lesions_dataset\FL_Training_Dataset"
-        
-        # Handle the checkpoint submission based on the 'choice' value
-        if choice == "unknown":
-            redirect('/')
         file_path = os.path.join(upload_path, filename)
         dst_path = os.path.join(training_path, choice)
-        move(file_path, dst_path)
-        print("{} moved tp {} folder in Traning".format(filename, choice))
+
+        if choice == "unknown":
+            os.remove(file_path) # comment this line is you need unkonwn images in the future
+            redirect('/')
+
+        elif os.path.isfile(file_path):
+            try:
+                move(file_path, dst_path)
+                flash(f"{filename} moved to {choice} folder in Training")
+            except Exception as e:
+                flash(f"Error moving {filename}: {str(e)}")
+        else:
+            flash(f"File not found: {filename}")
         
         return redirect('/')
 

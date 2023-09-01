@@ -16,26 +16,50 @@
             /* Replace with the URL of your background image */
             background-size: cover;
             background-repeat: no-repeat;
+            background-attachment: fixed; /* Keeps the background fixed while scrolling */
             color: #fff;
             /* Light text color */
             margin: 0;
             /* Remove default margin */
             padding: 0;
             /* Remove default padding */
+            position: relative;
         }
-
+    
+        body::before {
+            content: "";
+            background-color: rgba(93, 91, 91, 0.6);
+            /* Gray transparent overlay */
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            /* Cover the entire screen */
+            z-index: -1; /* Place the overlay behind content */
+        }
+    
         .container {
             text-align: center;
             padding: 20px;
             /* Add padding to create space around the content */
             min-height: 100vh;
-            /* Reduce container height to 80% of viewport height */
+            /* Make container 100% of viewport height */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background-color: rgba(0, 0, 0, 0.7);
-            /* Add a semi-transparent black overlay to improve readability */
+        }
+
+        .background-overlay {
+            background-color: rgba(166, 166, 166, 0.7);
+            /* Semi-transparent black overlay */
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            /* Cover the entire screen */
         }
 
         .card {
@@ -47,8 +71,12 @@
             /* Light text color for the card */
             padding: 20px;
             border-radius: 10px;
-            max-width: 500px;
+            max-width: 600px;
             /* Limit card width */
+        }
+
+        .card-title {
+        font-size: 30px; /* Adjust the font size as needed */
         }
 
         .custom-file-input {
@@ -56,19 +84,21 @@
         }
 
         .custom-file-label {
-            cursor: pointer;
-            padding: 8px 16px;
-            /* Smaller padding */
-            font-size: 18px;
-            /* Slightly smaller font size */
-            background-color: #3498db;
-            border: none;
-            border-radius: 5px;
-            color: #fff;
-        }
+        cursor: pointer;
+        padding: 8px 16px;
+        /* Smaller padding */
+        font-size: 18px;
+        /* Slightly smaller font size */
+        background-color: #18405b;
+        border: none;
+        border-radius: 5px;
+        color: #fff;
+        text-align: center; /* Center-align the text */
+    }
 
         .custom-file-label:hover {
-            background-color: #2980b9;
+            background-color: #1f455f;
+            border-color: #11222d;
         }
 
         img {
@@ -87,9 +117,9 @@
             border-radius: 5px;
             color: #fff;
             cursor: pointer;
-            font-size: 20px;
-            /* Larger font size */
-            padding: 8px 16px;
+            font-size: 16px;
+            /* Smaller font size */
+            padding: 4px 8px;
             /* Smaller padding */
             margin-top: 20px;
         }
@@ -112,9 +142,14 @@
 
         /* Dropdown styling */
         select.form-control {
-            font-size: 20px;
-            /* Larger font size */
+            font-size: 16px;
+            /* Smaller font size */
             margin-top: 20px;
+        }
+
+        .btn-primary {
+        background-color: #1f455f; /* Darker blue color */
+        border-color: #11222d; /* Matching border color */
         }
     </style>
 </head>
@@ -122,7 +157,7 @@
 <body>
     <div class="container">
         <div class="card">
-            <h2 class="card-title">Upload Dermoscopic Image</h2>
+            <h2 class="card-title">Upload Skin Dermoscopic Image</h2>
             <form method="post" action="/" enctype="multipart/form-data">
                 <div class="custom-file">
                     <input type="file" class="custom-file-input" id="file" name="file" autocomplete="off" required>
@@ -139,7 +174,7 @@
             </div>
             <!-- Add this HTML code inside the <div class="container"> in your index.html file -->
             <div class="mt-4">
-                <h3> Select the actual disease</h3>
+                <h3> Select the actual type</h3>
                 <form method="post" action="{{ url_for('submit_checkpoint', filename=messages[3]) }}">
                     <select class="form-control" name="choice">
                         <option value="unknown">Unknown</option>
@@ -148,7 +183,7 @@
                         <option value="nevus">Nevus</option>
                         <!-- Add more options as needed -->
                     </select>
-                    <button type="submit" class="btn btn-danger btn-block mt-3">Submit Checkpoint</button>
+                    <button type="submit" class="btn btn-danger btn-block mt-2">Submit Diagnosis</button>
                 </form>
             </div>
             {% endif %}
