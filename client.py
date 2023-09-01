@@ -43,8 +43,8 @@ class CifarClient(fl.client.NumPyClient):
         epochs: int = config["local_epochs"]
         self.trainset, self.testset = utils.load_partition(self.partition)
         if self.toy:
-            self.trainset = torch.utils.data.Subset(self.trainset, range(40))
-            self.testset = torch.utils.data.Subset(self.testset, range(40))
+            self.trainset = torch.utils.data.Subset(self.trainset, range(50))
+            self.testset = torch.utils.data.Subset(self.testset, range(50))
 
         n_valset = int(len(self.trainset) * self.validation_split)
 
@@ -81,7 +81,7 @@ class CifarClient(fl.client.NumPyClient):
         valLoader = DataLoader(valset, batch_size=16)
 
         loss, accuracy = utils.test(model, valLoader, steps, self.device)
-        return float(loss), len(self.valset), {"accuracy": float(accuracy)}
+        return float(loss), len(valset), {"accuracy": float(accuracy)}
 
 
 def client_dry_run(device: str = "cpu"):
@@ -150,7 +150,7 @@ def main() -> None:
 
 
         # Start Flower client
-        client = CifarClient(device=device, parition=args.partition, toy=args.toy)
+        client = CifarClient(device=device, partition=args.partition, toy=args.toy)
 
         fl.client.start_numpy_client(server_address="130.185.74.117:8080", client=client)
         

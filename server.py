@@ -20,7 +20,7 @@ def fit_config(server_round: int):
     local epoch, increase to two local epochs afterwards.
     """
     config = {
-        "batch_size": 16,
+        "batch_size": 32,
         "local_epochs": 1 if server_round < 2 else 2,
     }
     return config
@@ -33,7 +33,7 @@ def evaluate_config(server_round: int):
     batches) during rounds one to three, then increase to ten local
     evaluation steps.
     """
-    val_steps = 2 if server_round < 4 else 3
+    val_steps = 3 if server_round < 4 else 5
     return {"val_steps": val_steps}
 
 
@@ -64,7 +64,7 @@ def get_evaluate_fn(model: torch.nn.Module, toy: bool):
         state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
         model.load_state_dict(state_dict, strict=True)
         loss, accuracy = utils.test(model, testLoader)
-        print(f"Server-side evaluation loss {loss} / accuracy {accuracy:.4f}")
+        print(f"Server-side evaluation loss {loss} / accuracy {accuracy:.7f}")
         return loss, {"accuracy": accuracy}
 
     return evaluate

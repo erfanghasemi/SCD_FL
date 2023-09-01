@@ -63,11 +63,12 @@ def submit_checkpoint(filename):
         elif os.path.isfile(file_path):
             try:
                 move(file_path, dst_path)
-                flash(f"{filename} moved to {choice} folder in Training")
+                print(f"{filename} moved to {choice} folder in Training")
             except Exception as e:
-                flash(f"Error moving {filename}: {str(e)}")
+                print(f"Error moving {filename}: {str(e)}")
+                os.remove(file_path)
         else:
-            flash(f"File not found: {filename}")
+            print(f"File not found: {filename}")
         
         return redirect('/')
 
