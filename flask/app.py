@@ -1,7 +1,5 @@
 from flask import Flask, render_template, request, redirect, flash, url_for
-import urllib.request
 import os
-
 import sys
 sys.path.append('..')
 import utils

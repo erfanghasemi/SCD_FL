@@ -20,8 +20,8 @@ def fit_config(server_round: int):
     local epoch, increase to two local epochs afterwards.
     """
     config = {
-        "batch_size": 8,
-        "local_epochs": 1 if server_round < 2 else 1,
+        "batch_size": 16,
+        "local_epochs": 1 if server_round < 2 else 2,
     }
     return config
 
@@ -33,7 +33,7 @@ def evaluate_config(server_round: int):
     batches) during rounds one to three, then increase to ten local
     evaluation steps.
     """
-    val_steps = 2 if server_round < 4 else 2
+    val_steps = 2 if server_round < 4 else 3
     return {"val_steps": val_steps}
 
 
@@ -41,17 +41,17 @@ def get_evaluate_fn(model: torch.nn.Module, toy: bool):
     """Return an evaluation function for server-side evaluation."""
 
     # Load data and model here to avoid the overhead of doing it in `evaluate` itself
-    trainset, _, _ = utils.load_data()
+    _, testset, _ = utils.load_data()
 
-    n_train = len(trainset)
+    n_test = len(testset)
     if toy:
         # use only 10 samples as validation set
-        valset = torch.utils.data.Subset(trainset, range(n_train - 10, n_train))
+        testset = torch.utils.data.Subset(testset, range(n_test - 40, n_test))
     else:
         # Use the last 5k training examples as a validation set
-        valset = torch.utils.data.Subset(trainset, range(n_train - 5000, n_train))
+        testset = torch.utils.data.Subset(testset, range(n_test - 200, n_test))
 
-    valLoader = DataLoader(valset, batch_size=8)
+    testLoader = DataLoader(testset, batch_size=16)
 
     # The `evaluate` function will be called after every round
     def evaluate(
@@ -63,7 +63,7 @@ def get_evaluate_fn(model: torch.nn.Module, toy: bool):
         params_dict = zip(model.state_dict().keys(), parameters)
         state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
         model.load_state_dict(state_dict, strict=True)
-        loss, accuracy = utils.test(model, valLoader)
+        loss, accuracy = utils.test(model, testLoader)
         print(f"Server-side evaluation loss {loss} / accuracy {accuracy:.4f}")
         return loss, {"accuracy": accuracy}
 
