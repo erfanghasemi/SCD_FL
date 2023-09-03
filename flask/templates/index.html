@@ -25,7 +25,7 @@
             /* Remove default padding */
             position: relative;
         }
-    
+
         body::before {
             content: "";
             background-color: rgba(93, 91, 91, 0.6);
@@ -38,7 +38,7 @@
             /* Cover the entire screen */
             z-index: -1; /* Place the overlay behind content */
         }
-    
+
         .container {
             text-align: center;
             padding: 20px;
@@ -76,7 +76,7 @@
         }
 
         .card-title {
-        font-size: 30px; /* Adjust the font size as needed */
+            font-size: 30px; /* Adjust the font size as needed */
         }
 
         .custom-file-input {
@@ -84,17 +84,17 @@
         }
 
         .custom-file-label {
-        cursor: pointer;
-        padding: 8px 16px;
-        /* Smaller padding */
-        font-size: 18px;
-        /* Slightly smaller font size */
-        background-color: #18405b;
-        border: none;
-        border-radius: 5px;
-        color: #fff;
-        text-align: center; /* Center-align the text */
-    }
+            cursor: pointer;
+            padding: 8px 16px;
+            /* Smaller padding */
+            font-size: 18px;
+            /* Slightly smaller font size */
+            background-color: #18405b;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            text-align: center; /* Center-align the text */
+        }
 
         .custom-file-label:hover {
             background-color: #1f455f;
@@ -131,60 +131,91 @@
 
         /* Larger text size for labels and accuracy text */
         .label-text {
-            font-size: 22px;
-            /* Larger font size */
+            font-size: 18px; /* Larger font size */
+            margin-bottom: 5px; /* Add a small margin between label and accuracy */
         }
 
         .accuracy-text {
-            font-size: 20px;
-            /* Larger font size */
+            font-size: 18px; /* Larger font size */
         }
 
         /* Dropdown styling */
         select.form-control {
-            font-size: 16px;
-            /* Smaller font size */
+            font-size: 18px; /* Smaller font size */
             margin-top: 20px;
         }
 
         .btn-primary {
-        background-color: #1f455f; /* Darker blue color */
-        border-color: #11222d; /* Matching border color */
+            background-color: #1f455f; /* Darker blue color */
+            border-color: #11222d; /* Matching border color */
         }
+
+        /* Custom CSS for Grey Theme Cards */
+        .grey-card {
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px;
+            background-color: #f8f9fa;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .grey-card .card-title {
+            font-size: 28px; /* Bigger font size */
+            font-weight: bold;
+            color: #333;
+        }
+
+        .grey-card .card-text {
+            font-size: 20px; /* Bigger font size */
+        }
+
+        
     </style>
 </head>
 
 <body>
     <div class="container">
         <div class="card">
-            <h2 class="card-title">Upload Skin Dermoscopic Image</h2>
-            <form method="post" action="/" enctype="multipart/form-data">
-                <div class="custom-file">
-                    <input type="file" class="custom-file-input" id="file" name="file" autocomplete="off" required>
-                    <label class="custom-file-label" for="file">Select Image</label>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block mt-3">Submit</button>
-            </form>
+            <h2 class="card-header">Upload Skin Dermoscopic Image</h2>
+            <div class="card-body">
+                <form method="post" action="/" enctype="multipart/form-data">
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="file" name="file" autocomplete="off" required>
+                        <label class="custom-file-label" for="file">Select Image</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block mt-3">Submit</button>
+                </form>
+               <!-- Form content here -->
+            </div>
             {% with messages = get_flashed_messages() %}
             {% if messages %}
-            <div class="mt-4">
-                <p class="label-text">AI Diagnosis: {{ messages[0] }}</p>
-                <!-- <p class="accuracy-text">Accuracy: {{ messages[1] }}</p> -->
-                <img src="{{ messages[2] }}" alt="Image Description" class="img-fluid rounded mt-3">
-            </div>
-            <!-- Add this HTML code inside the <div class="container"> in your index.html file -->
-            <div class="mt-4">
-                <h3> Select the actual type</h3>
-                <form method="post" action="{{ url_for('submit_checkpoint', filename=messages[3]) }}">
-                    <select class="form-control" name="choice">
-                        <option value="unknown">Unknown</option>
-                        <option value="melanoma">Melanoma</option>
-                        <option value="basal cell carcinoma">Basal Cell Carcinoma</option>
-                        <option value="nevus">Nevus</option>
-                        <!-- Add more options as needed -->
-                    </select>
-                    <button type="submit" class="btn btn-danger btn-block mt-2">Submit Diagnosis</button>
-                </form>
+            <div class="card-body">
+                    <div class="row">
+                    {% for i in range(3) %}
+                    <div class="col-md-4">
+                        <div class="diagnosis-card">
+                            
+                            <p class="diagnosis-info">Diagnosis: {{ messages[i][0] }}</p>
+                            <p class="diagnosis-info">Probability: {{ messages[i][1] }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <img src="{{ messages[3] }}" alt="Image Description" class="img-fluid rounded mt-3">
+                <div class="mt-4">
+                    <h3>Select the actual type</h3>
+                    <form method="post" action="{{ url_for('submit_checkpoint', filename=messages[3]) }}">
+                        <select class="form-control" name="choice">
+                            <option value="unknown">Unknown</option>
+                            <option value="melanoma">Melanoma</option>
+                            <option value="basal cell carcinoma">Basal Cell Carcinoma</option>
+                            <option value="nevus">Nevus</option>
+                            <!-- Add more options as needed -->
+                        </select>
+                        <button type="submit" class="btn btn-danger btn-block mt-2">Submit Diagnosis</button>
+                    </form>
+                </div>
             </div>
             {% endif %}
             {% endwith %}
@@ -193,3 +224,6 @@
 </body>
 
 </html>
+
+</html>
+

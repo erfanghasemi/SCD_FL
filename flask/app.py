@@ -10,7 +10,7 @@ from shutil import move
 app = Flask(__name__)
 app.secret_key = "super secret key"
 
-CHECKPOINTS_PATH = "..\checkpoints"
+CHECKPOINTS_PATH = "..\client_checkpoints"
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 UPLOAD_FOLDER = r'static/uploads'
@@ -36,10 +36,10 @@ def submit_file():
             if '.' in file.filename and file.filename.rsplit('.', 1)[1].lower() in allowed_extensions:
                 file_path = app.config['UPLOAD_FOLDER'] + "/" + file.filename 
                 file.save(file_path)
-                model = utils.load_checkpoint(CHECKPOINTS_PATH, str(DEVICE)) 
-                prediction_disease = utils.inference(model, file_path)
-                flash(prediction_disease)
-                flash(0.1)
+                model = utils.load_checkpoint(CHECKPOINTS_PATH, DEVICE) 
+                prediction_disease = utils.inference(model, file_path, DEVICE)
+                for key, value in prediction_disease.items():
+                    flash((key, round(value, 2)))
                 flash(file_path)
                 flash(file.filename)
             else:

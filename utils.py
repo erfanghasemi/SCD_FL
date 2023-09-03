@@ -5,6 +5,7 @@ import platform
 import json
 import os
 from PIL import Image
+import numpy as np
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -19,7 +20,7 @@ WEIGHT_DECAY = 1e-4
 MODEL_PATH_SERVER = "./server_checkpoints"
 MODEL_PATH_CLIENT = "client_checkpoints"
 
-JSON_PATH = "label_mapping\modified_googlenet_lesions_mapping_labels.jsonlesions_dataset\json_lesions.json"
+JSON_PATH = "label_mapping\modified_googlenet_lesions_mapping_labels.json"
 
 
 
@@ -46,10 +47,17 @@ This function extracts and returns the predicted label from the model's output t
 It utilizes the provided class index mapping to map the predicted index to a human-readable label.
 The resulting label represents the model's prediction for a given input.
 """
-def get_predicted_label(output_tensor, class_idx):
-    _, predicted_idx = output_tensor.max(1)
-    predicted_label = class_idx[str(predicted_idx.item())][1]
-    return predicted_label
+def get_predicted_label(output, class_idx):
+    results = {}
+    output = output.tolist()[0]
+    for row in output:
+        predicted_index = output.index(row)
+        predicted_label = class_idx[str(predicted_index)][1]
+        predicted_probability = output[predicted_index]
+        results[predicted_label] = predicted_probability
+
+    results = dict(sorted(results.items(), key=lambda item: item[1], reverse=True))
+    return results
 
 
 
@@ -74,13 +82,12 @@ def inference(model, image_path, device):
     # Perform inference
     with torch.no_grad():
         output = model(input_image)
-        output.cpu()
-
+        
     # # # Get and print predicted label
-    predicted_label = get_predicted_label(output, class_idx)
-    print(f"Predicted Label: {predicted_label}")
+    predicted_labels = get_predicted_label(output.cpu().numpy(), class_idx)
+    print(f"Predicted Label: {predicted_labels}")
 
-    return predicted_label
+    return predicted_labels
     
 
 
@@ -92,12 +99,12 @@ def inference(model, image_path, device):
 def save_checkpoint(model, checkpoints_dir_path):
     # find the last saved version
     try:
-      last_version = os.listdir(checkpoints_dir_path)[-1].split('_')[-1].split('.')[0]
+      last_version = int(os.listdir(checkpoints_dir_path)[-1].split('_')[-1].split('.')[0])
     except:
       last_version = 0
 
     # create save checkpoint path
-    model_checkpoint_filename = "MODEL" + "_" + "CHECKPOINT" + "_" + "VERSION" + "_" + str(int(last_version)+1) + ".pth"
+    model_checkpoint_filename = "MODEL" + "_" + "CHECKPOINT" + "_" + "VERSION" + "_" + str(last_version+1) + ".pth"
     checkpoints_dir_path = os.path.join(checkpoints_dir_path, model_checkpoint_filename)
     
     # save the model 
@@ -121,11 +128,11 @@ def load_checkpoint(checkpoints_dir_path: str, device):
 
     checkpoints_dir_path = os.path.join(checkpoints_dir_path, last_checkpoint)
 
-    if device == "cuda:0":
+    if str(device) == "cuda:0":
         model = torch.load(checkpoints_dir_path)
         print("checkpoint version {} is loaded on GPU".format(last_checkpoint))
 
-    elif device == "cpu" :
+    elif str(device) == "cpu" :
         model = torch.load(checkpoints_dir_path, map_location=torch.device('cpu'))
         print("checkpoint version {} is loaded on CPU".format(last_checkpoint))
 
