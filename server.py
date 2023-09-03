@@ -19,14 +19,16 @@ SERVER_FRACTION_EVALUATE = 1.0
 SERVER_MIN_FIT_CLIENTS = 1
 SERVER_MIN_EVALUATE_CLIENTS = 1
 SERVER_MIN_AVAILABLE_CLIENTS = 1
+SERVER_TOY_SAMPLES_COUNT = 32
 
 CLIENT_BATCH_SIZE_LEARNING = 32
+CLIENT_BATCH_SIZE_TEST = 16
+
 CLIENT_LOCAL_EPOCHS_STEP_ZERO = 1
 CLIENT_LOCAL_EPOCHS_STEP_ONE = 2
 CLIENT_EVAL_STEPS_ZERO = 3
 CLIENT_EVAL_STEPS_ONE = 5
 
-TOY_SAMPLES_COUNT = 32
 
 def fit_config(server_round: int):
     """Return training configuration dict for each round.
@@ -48,9 +50,12 @@ def evaluate_config(server_round: int):
     batches) during rounds one to three, then increase to ten local
     evaluation steps.
     """
-    val_steps = CLIENT_EVAL_STEPS_ZERO if server_round < 4 else CLIENT_EVAL_STEPS_ONE
-    return {"val_steps": val_steps}
-
+    eval_steps = CLIENT_EVAL_STEPS_ZERO if server_round < 4 else CLIENT_EVAL_STEPS_ONE
+    batch_size = CLIENT_BATCH_SIZE_TEST
+    return {
+        "eval_steps": eval_steps,
+        "batch_size": batch_size,
+    }
 
 def get_evaluate_fn(model: torch.nn.Module, toy: bool):
     """Return an evaluation function for server-side evaluation."""
@@ -61,7 +66,7 @@ def get_evaluate_fn(model: torch.nn.Module, toy: bool):
     n_test = len(testset)
     if toy:
         # use only TOY_SAMPLES_COUNT samples as test set
-        testset = torch.utils.data.Subset(testset, range(n_test - TOY_SAMPLES_COUNT, n_test))
+        testset = torch.utils.data.Subset(testset, range(n_test - SERVER_TOY_SAMPLES_COUNT, n_test))
     else:
         # Use the all test examples as a test set
         testset = torch.utils.data.Subset(testset, range(n_test))

@@ -5,11 +5,20 @@ import torch
 import flwr as fl
 import argparse
 from collections import OrderedDict
-import warnings
 
+import warnings
 warnings.filterwarnings("ignore")
-LAYERS_COUNT = 3
-CHECKPOINTS_PATH = "checkpoints"
+
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+
+CLIENT_LAST_UNFREEZE_LAYERS_COUNT = 3
+CLIENT_VALIDATION_SPLIT = 0.1
+CLIENT_TRAIN_TOY_SAMPLES_COUNT = 50
+CLIENT_VALIDATION_TOY_SAMPLES_COUNT = 10
+CLIENT_TEST_TOY_SAMPLES_COUNT = 16
+
+CLEINT_MODEL_CHECKPOINTS_DIR_PATH = "client_checkpoints"
 
 class CifarClient(fl.client.NumPyClient):
     def __init__(
@@ -17,20 +26,21 @@ class CifarClient(fl.client.NumPyClient):
         device: str,
         partition: str,
         toy: bool,
-        validation_split: int = 0.1,
+        validation_split: int = CLIENT_VALIDATION_SPLIT,
     ):  
         self.device = device
         self.partition = partition
         self.toy=toy
         self.validation_split = validation_split
+
     def set_parameters(self, parameters):
-        """Loads a GoogleNet model and replaces it parameters with the ones
+        """Loads a modified GoogleNet model and replaces it parameters with the ones
         given."""
-        model = utils.load_model(layer_count=LAYERS_COUNT)
+        model = utils.load_model(layer_count=CLIENT_LAST_UNFREEZE_LAYERS_COUNT)
         params_dict = zip(model.state_dict().keys(), parameters)
         state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
         model.load_state_dict(state_dict, strict=True)
-        utils.save_checkpoint(model, CHECKPOINTS_PATH)
+        utils.save_checkpoint(model, CLEINT_MODEL_CHECKPOINTS_DIR_PATH)
         return model
 
     def fit(self, parameters, config):
@@ -38,20 +48,24 @@ class CifarClient(fl.client.NumPyClient):
 
         # Update local model parameters
         model = self.set_parameters(parameters)
+
         # Get hyperparameters for this round
         batch_size: int = config["batch_size"]
         epochs: int = config["local_epochs"]
-        self.trainset, self.testset = utils.load_partition(self.partition)
+        
+        # Load trainset and valset
+        trainset, _ = utils.load_partition(self.partition)
+
+        n_trainset = len(trainset)
+        n_valset = int(len(trainset) * self.validation_split)
+
         if self.toy:
-            self.trainset = torch.utils.data.Subset(self.trainset, range(50))
-            self.testset = torch.utils.data.Subset(self.testset, range(50))
-
-        n_valset = int(len(self.trainset) * self.validation_split)
-
-        valset = torch.utils.data.Subset(self.trainset, range(0, n_valset))
-        trainset = torch.utils.data.Subset(
-            self.trainset, range(n_valset, len(self.trainset))
-        )
+            toy_offset =  n_trainset - CLIENT_TRAIN_TOY_SAMPLES_COUNT
+            valset = torch.utils.data.Subset(trainset, range(toy_offset-CLIENT_VALIDATION_TOY_SAMPLES_COUNT, toy_offset))
+            trainset = torch.utils.data.Subset(trainset, range(toy_offset, n_trainset))
+        else:
+            valset = torch.utils.data.Subset(trainset, range(0, n_valset))
+            trainset = torch.utils.data.Subset(trainset, range(n_valset, n_trainset))
 
         trainLoader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
         valLoader = DataLoader(valset, batch_size=batch_size)
@@ -67,38 +81,42 @@ class CifarClient(fl.client.NumPyClient):
         """Evaluate parameters on the locally held test set."""
         # Update local model parameters
         model = self.set_parameters(parameters)
-        self.trainset, self.testset = utils.load_partition(self.partition)
-        if self.toy:
-            self.trainset = torch.utils.data.Subset(self.trainset, range(40))
-            self.testset = torch.utils.data.Subset(self.testset, range(40))
+
+        # Load test dataset for evaluation
+        _ , testset = utils.load_partition(self.partition)
+        n_testset = len(testset)
         
+        if self.toy:
+            testset = torch.utils.data.Subset(testset, range(CLIENT_TEST_TOY_SAMPLES_COUNT))
+        else:
+            testset = torch.utils.data.Subset(testset, range(n_testset))
+
         # Get config values
-        steps: int = config["val_steps"]
-        n_valset = int(len(self.trainset) * self.validation_split)
-        valset = torch.utils.data.Subset(self.trainset, range(0, n_valset))
+        steps: int = config["eval_steps"]
+        batch_size: int = config["batch_size"]
 
         # Evaluate global model parameters on the local test data and return results
-        valLoader = DataLoader(valset, batch_size=16)
+        testLoader = DataLoader(testset, batch_size=batch_size)
 
-        loss, accuracy = utils.test(model, valLoader, steps, self.device)
-        return float(loss), len(valset), {"accuracy": float(accuracy)}
+        loss, accuracy = utils.test(model, testLoader, steps, self.device)
+        return float(loss), len(testset), {"accuracy": float(accuracy)}
 
 
 def client_dry_run(device: str = "cpu"):
     """Weak tests to check whether all client methods are working as
     expected."""
 
-    model = utils.load_model(layer_count=LAYERS_COUNT)
+    model = utils.load_model(layer_count=CLIENT_LAST_UNFREEZE_LAYERS_COUNT)
     trainset, testset = utils.load_partition(0)
     trainset = torch.utils.data.Subset(trainset, range(10))
     testset = torch.utils.data.Subset(testset, range(10))
     client = CifarClient(trainset, testset, device)
     client.fit(
         utils.get_model_params(model),
-        {"batch_size": 16, "local_epochs": 1},
+        {"batch_size": 32, "local_epochs": 1},
     )
 
-    client.evaluate(utils.get_model_params(model), {"val_steps": 32})
+    client.evaluate(utils.get_model_params(model), {"val_steps": 5})
 
     print("Dry Run Successful")
 
@@ -119,7 +137,7 @@ def main() -> None:
         default=0,
         choices=range(0, 10),
         required=False,
-        help="Specifies the artificial data partition of CIFAR10 to be used. \
+        help="Specifies the artificial data partition of ISIC 2019 to be used. \
         Picks partition 0 by default",
     )
     parser.add_argument(
@@ -127,7 +145,7 @@ def main() -> None:
         type=bool,
         default=False,
         required=False,
-        help="Set to true to quicky run the client using only 10 datasamples. \
+        help="Set to true to quicky run the client using only CLIENT_TOY_SAMPLES_COUNT datasamples. \
         Useful for testing purposes. Default: False",
     )
     parser.add_argument(
@@ -147,8 +165,6 @@ def main() -> None:
     if args.dry:
         client_dry_run(device)
     else:
-
-
         # Start Flower client
         client = CifarClient(device=device, partition=args.partition, toy=args.toy)
 
@@ -158,4 +174,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-    utils.remove_checkpoints(CHECKPOINTS_PATH)  # comment this line if you need checkpoints in the future
+    utils.remove_checkpoints(CLEINT_MODEL_CHECKPOINTS_DIR_PATH)  # comment this line if you need clinet checkpoints in the future
