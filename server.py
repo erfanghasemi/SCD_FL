@@ -9,9 +9,24 @@ import torch
 import utils as utils
 
 import warnings
-
 warnings.filterwarnings("ignore")
-LAYERS_COUNT = 3
+
+SERVER_NUM_ROUNDS = 5
+SERVER_LAST_UNFREEZE_LAYERS_COUNT = 3
+SERVER_BATCH_SIZE_EVAL = 32
+SERVER_FRACTION_FIT = 1.0
+SERVER_FRACTION_EVALUATE = 1.0
+SERVER_MIN_FIT_CLIENTS = 1
+SERVER_MIN_EVALUATE_CLIENTS = 1
+SERVER_MIN_AVAILABLE_CLIENTS = 1
+
+CLIENT_BATCH_SIZE_LEARNING = 32
+CLIENT_LOCAL_EPOCHS_STEP_ZERO = 1
+CLIENT_LOCAL_EPOCHS_STEP_ONE = 2
+CLIENT_EVAL_STEPS_ZERO = 3
+CLIENT_EVAL_STEPS_ONE = 5
+
+TOY_SAMPLES_COUNT = 32
 
 def fit_config(server_round: int):
     """Return training configuration dict for each round.
@@ -20,8 +35,8 @@ def fit_config(server_round: int):
     local epoch, increase to two local epochs afterwards.
     """
     config = {
-        "batch_size": 32,
-        "local_epochs": 1 if server_round < 2 else 2,
+        "batch_size": CLIENT_BATCH_SIZE_LEARNING,
+        "local_epochs": CLIENT_LOCAL_EPOCHS_STEP_ZERO if server_round < 2 else CLIENT_LOCAL_EPOCHS_STEP_ONE,
     }
     return config
 
@@ -33,7 +48,7 @@ def evaluate_config(server_round: int):
     batches) during rounds one to three, then increase to ten local
     evaluation steps.
     """
-    val_steps = 3 if server_round < 4 else 5
+    val_steps = CLIENT_EVAL_STEPS_ZERO if server_round < 4 else CLIENT_EVAL_STEPS_ONE
     return {"val_steps": val_steps}
 
 
@@ -45,13 +60,13 @@ def get_evaluate_fn(model: torch.nn.Module, toy: bool):
 
     n_test = len(testset)
     if toy:
-        # use only 10 samples as validation set
-        testset = torch.utils.data.Subset(testset, range(n_test - 40, n_test))
+        # use only TOY_SAMPLES_COUNT samples as test set
+        testset = torch.utils.data.Subset(testset, range(n_test - TOY_SAMPLES_COUNT, n_test))
     else:
-        # Use the last 5k training examples as a validation set
-        testset = torch.utils.data.Subset(testset, range(n_test - 200, n_test))
+        # Use the all test examples as a test set
+        testset = torch.utils.data.Subset(testset, range(n_test))
 
-    testLoader = DataLoader(testset, batch_size=16)
+    testLoader = DataLoader(testset, batch_size=SERVER_BATCH_SIZE_EVAL, shuffle=True)
 
     # The `evaluate` function will be called after every round
     def evaluate(
@@ -64,7 +79,7 @@ def get_evaluate_fn(model: torch.nn.Module, toy: bool):
         state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
         model.load_state_dict(state_dict, strict=True)
         loss, accuracy = utils.test(model, testLoader)
-        print(f"Server-side evaluation loss {loss} / accuracy {accuracy:.7f}")
+        print(f"Server-side evaluation loss {loss} / accuracy {accuracy:.6f}")
         return loss, {"accuracy": accuracy}
 
     return evaluate
@@ -76,30 +91,30 @@ def main():
     2. server-side parameter evaluation
     """
 
-    # Parse command line argument `partition`
+    # Parse command line argument `--toy`
     parser = argparse.ArgumentParser(description="Flower")
     parser.add_argument(
         "--toy",
         type=bool,
         default=False,
         required=False,
-        help="Set to true to use only 10 datasamples for validation. \
+        help="Set to true to use only TOY_SAMPLES_COUNT datasamples for evaluation. \
             Useful for testing purposes. Default: False",
     )
 
     args = parser.parse_args()
 
-    model = utils.load_model(layer_count=LAYERS_COUNT)
+    model = utils.load_model(layer_count=SERVER_LAST_UNFREEZE_LAYERS_COUNT)
 
     model_parameters = [val.cpu().numpy() for _, val in model.state_dict().items()]
 
     # Create strategy
     strategy = fl.server.strategy.FedAvg(
-        fraction_fit=1.0,
-        fraction_evaluate=1.0,
-        min_fit_clients=1,
-        min_evaluate_clients=1,
-        min_available_clients=1,
+        fraction_fit=SERVER_FRACTION_FIT,
+        fraction_evaluate=SERVER_FRACTION_EVALUATE,
+        min_fit_clients=SERVER_MIN_FIT_CLIENTS,
+        min_evaluate_clients=SERVER_MIN_EVALUATE_CLIENTS,
+        min_available_clients=SERVER_MIN_AVAILABLE_CLIENTS,
         evaluate_fn=get_evaluate_fn(model, args.toy),
         on_fit_config_fn=fit_config,
         on_evaluate_config_fn=evaluate_config,
@@ -109,7 +124,7 @@ def main():
     # Start Flower server for four rounds of federated learning
     fl.server.start_server(
         server_address="0.0.0.0:8080",
-        config=fl.server.ServerConfig(num_rounds=5),
+        config=fl.server.ServerConfig(num_rounds=SERVER_NUM_ROUNDS),
         strategy=strategy,
     )
 

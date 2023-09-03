@@ -2,19 +2,18 @@ import torch
 import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
 import platform
-import torch.nn as nn
 import json
 import os
 from PIL import Image
 
 import warnings
-
 warnings.filterwarnings("ignore")
 
 # DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 MODEL_PATH_LINUX = "./checkpoints/Model_Checkpoint_Version_0.pth"
 MODEL_PATH_WINDOWS = "checkpoints\Model_Checkpoint_Version_0.pth"
+
 JSON_PATH = "lesions_dataset\json_lesions.json"
 
 
@@ -88,7 +87,7 @@ def remove_checkpoints(checkponints_path):
 
 
 def load_data():
-    """Load CIFAR-10 (training and test set)."""
+    """Load ISIC 2019 (training and test set)."""
     transform = transforms.Compose([
         transforms.Resize(1024),
         transforms.CenterCrop(750),
@@ -99,7 +98,7 @@ def load_data():
     # Get the system's platform information
     system_platform = platform.system()
 
-    # Check if it's Ubuntu
+    # Check if it's Linux
     if system_platform == "Linux":
         # Further check if it's Linux
         trainset = ImageFolder(root='./lesions_dataset/FL_Training_Dataset', transform=transform)
@@ -184,37 +183,6 @@ def test(net, testloader, steps: int = None, device: str = "cpu"):
     return loss, accuracy
 
 
-# def replace_classifying_layer(efficientnet_model, num_classes: int = 10):
-#     """Replaces the final layer of the classifier."""
-#     num_features = efficientnet_model.classifier.fc.in_features
-#     efficientnet_model.classifier.fc = torch.nn.Linear(num_features, num_classes)
-
-
-# def load_efficientnet(entrypoint: str = "nvidia_efficientnet_b0", classes: int = None):
-#     """Loads pretrained efficientnet model from torch hub. Replaces final
-#     classifying layer if classes is specified.
-
-#     Args:
-#         entrypoint: EfficientNet model to download.
-#                     For supported entrypoints, please refer
-#                     https://pytorch.org/hub/nvidia_deeplearningexamples_efficientnet/
-#         classes: Number of classes in final classifying layer. Leave as None to get the downloaded
-#                  model untouched.
-#     Returns:
-#         EfficientNet Model
-
-#     Note: One alternative implementation can be found at https://github.com/lukemelas/EfficientNet-PyTorch
-#     """
-#     efficientnet = torch.hub.load(
-#         "NVIDIA/DeepLearningExamples:torchhub", entrypoint, pretrained=True
-#     )
-
-#     if classes is not None:
-#         replace_classifying_layer(efficientnet, classes)
-#     return efficientnet
-
-
-
 def unfreeze_classifying_layer(model, layer_count: int = 3):
     """Unfreeze the final layer of the classifier."""
     for param in model.parameters():
@@ -222,7 +190,7 @@ def unfreeze_classifying_layer(model, layer_count: int = 3):
 
     all_layers = list(model.children())
     num_layers = len(all_layers)
-    last_three_layers = nn.Sequential(*all_layers[num_layers - layer_count:])
+    last_three_layers = torch.nn.Sequential(*all_layers[num_layers - layer_count:])
 
     for param in last_three_layers.parameters():
         param.requires_grad = True
