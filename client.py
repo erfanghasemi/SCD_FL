@@ -12,7 +12,6 @@ warnings.filterwarnings("ignore")
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-CLIENT_LAST_UNFREEZE_LAYERS_COUNT = 3
 CLIENT_VALIDATION_SPLIT = 0.1
 CLIENT_TRAIN_TOY_SAMPLES_COUNT = 50
 CLIENT_VALIDATION_TOY_SAMPLES_COUNT = 10
@@ -36,7 +35,7 @@ class CifarClient(fl.client.NumPyClient):
     def set_parameters(self, parameters):
         """Loads a modified GoogleNet model and replaces it parameters with the ones
         given."""
-        model = utils.load_model(layer_count=CLIENT_LAST_UNFREEZE_LAYERS_COUNT)
+        model = utils.load_model(device=self.device)
         params_dict = zip(model.state_dict().keys(), parameters)
         state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
         model.load_state_dict(state_dict, strict=True)
@@ -106,7 +105,7 @@ def client_dry_run(device: str = "cpu"):
     """Weak tests to check whether all client methods are working as
     expected."""
 
-    model = utils.load_model(layer_count=CLIENT_LAST_UNFREEZE_LAYERS_COUNT)
+    model = utils.load_model(layer_count=CLIENT_LAST_UNFREEZE_LAYERS_COUNT, device=device)
     trainset, testset = utils.load_partition(0)
     trainset = torch.utils.data.Subset(trainset, range(10))
     testset = torch.utils.data.Subset(testset, range(10))

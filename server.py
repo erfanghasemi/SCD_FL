@@ -109,7 +109,7 @@ def main():
 
     args = parser.parse_args()
 
-    model = utils.load_model(layer_count=SERVER_LAST_UNFREEZE_LAYERS_COUNT)
+    model = utils.load_model(layer_count=SERVER_LAST_UNFREEZE_LAYERS_COUNT, device="cpu")
 
     model_parameters = [val.cpu().numpy() for _, val in model.state_dict().items()]
 
