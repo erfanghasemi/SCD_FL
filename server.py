@@ -29,6 +29,8 @@ CLIENT_LOCAL_EPOCHS_STEP_ONE = 2
 CLIENT_EVAL_STEPS_ZERO = 3
 CLIENT_EVAL_STEPS_ONE = 5
 
+SERVER_MODEL_CHECKPOINTS_DIR_PATH = "./server_checkpoints"
+
 
 def fit_config(server_round: int):
     """Return training configuration dict for each round.
@@ -83,6 +85,7 @@ def get_evaluate_fn(model: torch.nn.Module, toy: bool):
         params_dict = zip(model.state_dict().keys(), parameters)
         state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
         model.load_state_dict(state_dict, strict=True)
+        utils.save_checkpoint(model, SERVER_MODEL_CHECKPOINTS_DIR_PATH)
         loss, accuracy = utils.test(model, testLoader)
         print(f"Server-side evaluation loss {loss} / accuracy {accuracy:.6f}")
         return loss, {"accuracy": accuracy}
