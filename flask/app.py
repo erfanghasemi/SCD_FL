@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, flash, url_for
 import os
 import sys
 sys.path.append('..')
-import utils
+import utils as utils
 import torch
 from shutil import move
 
