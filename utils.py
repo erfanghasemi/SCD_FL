@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore")
 IMAGE_SIZE = 1024  # The size (in pixels) of the images used in the model.
 CENTER_CROP_SIZE = 750  # The size (in pixels) for center cropping the image
 
-LOCAL_LEARNING_RATE = 0.0001
+LOCAL_LEARNING_RATE = 0.005
 MOMENTUM = 0.9
 WEIGHT_DECAY = 1e-4
 
@@ -323,6 +323,9 @@ def unfreeze_classifying_layer(model, layer_count: int = 3):
     for param in last_three_layers.parameters():
         param.requires_grad = True
 
+    return model
+
+
 
 
 """
@@ -333,7 +336,7 @@ If the platform is unsupported, it prints an error message.
 Additionally, it can unfreeze the specified number of layers in the classifier using `unfreeze_classifying_layer` (for transfer learning).
 The loaded and optionally modified model is returned.
 """
-def load_model(device: str, layer_count: int = 3):
+def load_model(device: str, layer_count: int = 4):
     
     # Get the system's platform information
     system_platform = platform.system()
@@ -350,7 +353,7 @@ def load_model(device: str, layer_count: int = 3):
         print("Unsupported operating system detected.")
 
     # DO NOT USE this line if you need to train whole network
-    unfreeze_classifying_layer(model, layer_count)
+    model = unfreeze_classifying_layer(model, layer_count)
     return model
 
 
