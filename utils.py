@@ -13,8 +13,8 @@ warnings.filterwarnings("ignore")
 IMAGE_SIZE = 1024  # The size (in pixels) of the images used in the model.
 CENTER_CROP_SIZE = 1024  # The size (in pixels) for center cropping the image
 
-LOCAL_LEARNING_RATE = 0.0001
-MOMENTUM = 0.98
+LOCAL_LEARNING_RATE = 0.001
+MOMENTUM = 0.9
 WEIGHT_DECAY = 1e-4
 
 MODEL_PATH_SERVER = "./server_checkpoints"
