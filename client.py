@@ -13,9 +13,9 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 CLIENT_VALIDATION_SPLIT = 0.1
-CLIENT_TRAIN_TOY_SAMPLES_COUNT = 64
-CLIENT_VALIDATION_TOY_SAMPLES_COUNT = 16
-CLIENT_TEST_TOY_SAMPLES_COUNT = 16
+CLIENT_TRAIN_TOY_SAMPLES_COUNT = 32
+CLIENT_VALIDATION_TOY_SAMPLES_COUNT = 8
+CLIENT_TEST_TOY_SAMPLES_COUNT = 8
 
 CLEINT_MODEL_CHECKPOINTS_DIR_PATH = "client_checkpoints"
 
@@ -173,4 +173,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-    utils.remove_checkpoints(CLEINT_MODEL_CHECKPOINTS_DIR_PATH)  # comment this line if you need clinet checkpoints in the future
+    # utils.remove_checkpoints(CLEINT_MODEL_CHECKPOINTS_DIR_PATH)  # comment this line if you need clinet checkpoints in the future
