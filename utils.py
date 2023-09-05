@@ -314,14 +314,14 @@ allowing them to be trained during subsequent optimization steps.
 def unfreeze_classifying_layer(model, layer_count: int = 3):
     """Unfreeze the final layer of the classifier."""
     for param in model.parameters():
+        param.requires_grad = False
+
+    all_layers = list(model.children())
+    num_layers = len(all_layers)
+    last_three_layers = torch.nn.Sequential(*all_layers[num_layers - layer_count:])
+
+    for param in last_three_layers.parameters():
         param.requires_grad = True
-
-    # all_layers = list(model.children())
-    # num_layers = len(all_layers)
-    # last_three_layers = torch.nn.Sequential(*all_layers[num_layers - layer_count:])
-
-    # for param in last_three_layers.parameters():
-    #     param.requires_grad = True
 
     return model
 
