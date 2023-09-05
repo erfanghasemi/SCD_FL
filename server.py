@@ -11,7 +11,7 @@ import utils as utils
 import warnings
 warnings.filterwarnings("ignore")
 
-SERVER_NUM_ROUNDS = 20
+SERVER_NUM_ROUNDS = 1
 SERVER_LAST_UNFREEZE_LAYERS_COUNT = 3
 SERVER_BATCH_SIZE_EVAL = 32
 SERVER_FRACTION_FIT = 1.0

@@ -39,7 +39,6 @@ class CifarClient(fl.client.NumPyClient):
         params_dict = zip(model.state_dict().keys(), parameters)
         state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
         model.load_state_dict(state_dict, strict=True)
-        utils.save_checkpoint(model, CLEINT_MODEL_CHECKPOINTS_DIR_PATH)
         return model
 
     def fit(self, parameters, config):
@@ -47,6 +46,7 @@ class CifarClient(fl.client.NumPyClient):
 
         # Update local model parameters
         model = self.set_parameters(parameters)
+        utils.save_checkpoint(model, CLEINT_MODEL_CHECKPOINTS_DIR_PATH)
 
         # Get hyperparameters for this round
         batch_size: int = config["batch_size"]
@@ -60,12 +60,13 @@ class CifarClient(fl.client.NumPyClient):
 
         if self.toy:
             valset_indices = torch.randperm(n_trainset)[:CLIENT_VALIDATION_TOY_SAMPLES_COUNT]
-            trainset_indices = torch.randperm(n_trainset)[:CLIENT_TRAIN_TOY_SAMPLES_COUNT]
+            # trainset_indices = torch.randperm(n_trainset)[:CLIENT_TRAIN_TOY_SAMPLES_COUNT]
             
             valset_sampler = SubsetRandomSampler(valset_indices)
-            trainset_sampler = SubsetRandomSampler(trainset_indices)
+            # trainset_sampler = SubsetRandomSampler(trainset_indices)
 
-            trainLoader = DataLoader(trainset, batch_size=batch_size, sampler=trainset_sampler)
+            # trainLoader = DataLoader(trainset, batch_size=batch_size, sampler=trainset_sampler)
+            trainset = torch.utils.data.Subset(trainset, range(0, n_trainset))
             valLoader = DataLoader(trainset, batch_size=batch_size, sampler=valset_sampler)
         else:
             valset = torch.utils.data.Subset(trainset, range(0, n_valset))
