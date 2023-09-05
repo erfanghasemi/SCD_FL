@@ -66,7 +66,7 @@ class CifarClient(fl.client.NumPyClient):
             trainset_sampler = SubsetRandomSampler(trainset_indices)
 
             trainLoader = DataLoader(trainset, batch_size=batch_size, sampler=trainset_sampler)
-            valLoader = DataLoader(valset, batch_size=batch_size, sampler=valset_sampler)
+            valLoader = DataLoader(trainset, batch_size=batch_size, sampler=valset_sampler)
         else:
             valset = torch.utils.data.Subset(trainset, range(0, n_valset))
             trainset = torch.utils.data.Subset(trainset, range(n_valset, n_trainset))
