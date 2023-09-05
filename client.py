@@ -73,7 +73,7 @@ class CifarClient(fl.client.NumPyClient):
             valset = torch.utils.data.Subset(trainset, range(0, n_valset))
             trainset = torch.utils.data.Subset(trainset, range(n_valset, n_trainset))
             trainLoader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
-            valLoader = DataLoader(valset, batch_size=batch_size, shuffle=True)
+            valLoader = DataLoader(valset, batch_size=batch_size)
 
         results = utils.train(model, trainLoader, valLoader, epochs, self.device)
 
