@@ -1,5 +1,5 @@
 import utils as utils
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, SubsetRandomSampler
 import torchvision.datasets
 import torch
 import flwr as fl
@@ -13,7 +13,7 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 CLIENT_VALIDATION_SPLIT = 0.1
-CLIENT_TRAIN_TOY_SAMPLES_COUNT = 32
+CLIENT_TRAIN_TOY_SAMPLES_COUNT = 64
 CLIENT_VALIDATION_TOY_SAMPLES_COUNT = 8
 CLIENT_TEST_TOY_SAMPLES_COUNT = 8
 
@@ -59,15 +59,19 @@ class CifarClient(fl.client.NumPyClient):
         n_valset = int(len(trainset) * self.validation_split)
 
         if self.toy:
-            toy_offset =  n_trainset - CLIENT_TRAIN_TOY_SAMPLES_COUNT
-            valset = torch.utils.data.Subset(trainset, range(toy_offset-CLIENT_VALIDATION_TOY_SAMPLES_COUNT, toy_offset))
-            trainset = torch.utils.data.Subset(trainset, range(toy_offset, n_trainset))
+            valset_indices = torch.randperm(n_trainset)[:CLIENT_VALIDATION_TOY_SAMPLES_COUNT]
+            trainset_indices = torch.randperm(n_trainset)[:CLIENT_TRAIN_TOY_SAMPLES_COUNT]
+            
+            valset_sampler = SubsetRandomSampler(valset_indices)
+            trainset_sampler = SubsetRandomSampler(trainset_indices)
+
+            trainLoader = DataLoader(trainset, batch_size=batch_size, sampler=trainset_sampler)
+            valLoader = DataLoader(valset, batch_size=batch_size, sampler=valset_sampler)
         else:
             valset = torch.utils.data.Subset(trainset, range(0, n_valset))
             trainset = torch.utils.data.Subset(trainset, range(n_valset, n_trainset))
-
-        trainLoader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
-        valLoader = DataLoader(valset, batch_size=batch_size)
+            trainLoader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
+            valLoader = DataLoader(valset, batch_size=batch_size, shuffle=True)
 
         results = utils.train(model, trainLoader, valLoader, epochs, self.device)
 

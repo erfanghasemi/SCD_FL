@@ -11,10 +11,10 @@ import warnings
 warnings.filterwarnings("ignore")
 
 IMAGE_SIZE = 1024  # The size (in pixels) of the images used in the model.
-CENTER_CROP_SIZE = 750  # The size (in pixels) for center cropping the image
+CENTER_CROP_SIZE = 800  # The size (in pixels) for center cropping the image
 
 LOCAL_LEARNING_RATE = 0.00001
-MOMENTUM = 0.98
+MOMENTUM = 0.95
 WEIGHT_DECAY = 1e-4
 
 MODEL_PATH_SERVER = "./server_checkpoints"
@@ -207,11 +207,11 @@ The training and test partitions are then created as subsets of the full dataset
 The function returns the specified training and test partitions for a given index.
 """
 def load_partition(idx: int):
-    """Load 1/10th of the training and test data to simulate a partition."""
-    assert idx in range(10)
+    """Load 1/5th of the training and test data to simulate a partition."""
+    assert idx in range(5)
     trainset, testset, num_examples = load_data()
-    n_train = int(num_examples["trainset"] / 10)
-    n_test = int(num_examples["testset"] / 10)
+    n_train = int(num_examples["trainset"] / 5)
+    n_test = int(num_examples["testset"] / 5)
 
     train_parition = torch.utils.data.Subset(
         trainset, range(idx * n_train, (idx + 1) * n_train)
@@ -314,14 +314,14 @@ allowing them to be trained during subsequent optimization steps.
 def unfreeze_classifying_layer(model, layer_count: int = 3):
     """Unfreeze the final layer of the classifier."""
     for param in model.parameters():
-        param.requires_grad = False
-
-    all_layers = list(model.children())
-    num_layers = len(all_layers)
-    last_three_layers = torch.nn.Sequential(*all_layers[num_layers - layer_count:])
-
-    for param in last_three_layers.parameters():
         param.requires_grad = True
+
+    # all_layers = list(model.children())
+    # num_layers = len(all_layers)
+    # last_three_layers = torch.nn.Sequential(*all_layers[num_layers - layer_count:])
+
+    # for param in last_three_layers.parameters():
+    #     param.requires_grad = True
 
     return model
 
