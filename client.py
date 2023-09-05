@@ -46,7 +46,7 @@ class CifarClient(fl.client.NumPyClient):
 
         # Update local model parameters
         model = self.set_parameters(parameters)
-        utils.save_checkpoint(model, CLEINT_MODEL_CHECKPOINTS_DIR_PATH)
+        
 
         # Get hyperparameters for this round
         batch_size: int = config["batch_size"]
@@ -67,6 +67,7 @@ class CifarClient(fl.client.NumPyClient):
 
             # trainLoader = DataLoader(trainset, batch_size=batch_size, sampler=trainset_sampler)
             trainset = torch.utils.data.Subset(trainset, range(0, n_trainset))
+            trainLoader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
             valLoader = DataLoader(trainset, batch_size=batch_size, sampler=valset_sampler)
         else:
             valset = torch.utils.data.Subset(trainset, range(0, n_valset))
@@ -85,7 +86,7 @@ class CifarClient(fl.client.NumPyClient):
         """Evaluate parameters on the locally held test set."""
         # Update local model parameters
         model = self.set_parameters(parameters)
-
+        utils.save_checkpoint(model, CLEINT_MODEL_CHECKPOINTS_DIR_PATH)
         # Load test dataset for evaluation
         _ , testset = utils.load_partition(self.partition)
         n_testset = len(testset)
