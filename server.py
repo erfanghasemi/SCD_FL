@@ -11,7 +11,7 @@ import utils as utils
 import warnings
 warnings.filterwarnings("ignore")
 
-SERVER_NUM_ROUNDS = 5
+SERVER_NUM_ROUNDS = 2
 SERVER_LAST_UNFREEZE_LAYERS_COUNT = 3
 SERVER_BATCH_SIZE_EVAL = 32
 SERVER_FRACTION_FIT = 1.0
@@ -24,7 +24,7 @@ SERVER_TOY_SAMPLES_COUNT = 4
 CLIENT_BATCH_SIZE_LEARNING = 32
 CLIENT_BATCH_SIZE_TEST = 32
 
-CLIENT_LOCAL_EPOCHS_STEP_ZERO = 1
+CLIENT_LOCAL_EPOCHS_STEP_ZERO = 2
 CLIENT_LOCAL_EPOCHS_STEP_ONE = 2
 CLIENT_EVAL_STEPS_ZERO = 2
 CLIENT_EVAL_STEPS_ONE = 3
@@ -123,7 +123,7 @@ def main():
         min_fit_clients=SERVER_MIN_FIT_CLIENTS,
         min_evaluate_clients=SERVER_MIN_EVALUATE_CLIENTS,
         min_available_clients=SERVER_MIN_AVAILABLE_CLIENTS,
-        evaluate_fn=get_evaluate_fn(model, args.toy),
+        # evaluate_fn=get_evaluate_fn(model, args.toy),
         on_fit_config_fn=fit_config,
         on_evaluate_config_fn=evaluate_config,
         initial_parameters=fl.common.ndarrays_to_parameters(model_parameters),
