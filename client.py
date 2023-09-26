@@ -173,7 +173,7 @@ def main() -> None:
         # Start Flower client
         client = Client(device=device, partition=args.partition, toy=args.toy)
 
-        fl.client.start_numpy_client(server_address="130.185.74.117:8080", client=client)
+        fl.client.start_numpy_client(server_address="146.19.212.227:8080", client=client)
         
 
 
