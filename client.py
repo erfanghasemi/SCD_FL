@@ -19,7 +19,7 @@ CLIENT_TEST_TOY_SAMPLES_COUNT = 4
 
 CLEINT_MODEL_CHECKPOINTS_DIR_PATH = "client_checkpoints"
 
-class CifarClient(fl.client.NumPyClient):
+class Client(fl.client.NumPyClient):
     def __init__(
         self,
         device: str,
@@ -115,7 +115,7 @@ def client_dry_run(device: str = "cpu"):
     trainset, testset = utils.load_partition(0)
     trainset = torch.utils.data.Subset(trainset, range(10))
     testset = torch.utils.data.Subset(testset, range(10))
-    client = CifarClient(trainset, testset, device)
+    client = Client(trainset, testset, device)
     client.fit(
         utils.get_model_params(model),
         {"batch_size": 32, "local_epochs": 1},
@@ -158,7 +158,7 @@ def main() -> None:
         type=bool,
         default=False,
         required=False,
-        help="Set to true to use GPU. Default: False",
+        help="Set to true to use GPU. Default: False"
     )
 
     args = parser.parse_args()
@@ -171,7 +171,7 @@ def main() -> None:
         client_dry_run(device)
     else:
         # Start Flower client
-        client = CifarClient(device=device, partition=args.partition, toy=args.toy)
+        client = Client(device=device, partition=args.partition, toy=args.toy)
 
         fl.client.start_numpy_client(server_address="130.185.74.117:8080", client=client)
         

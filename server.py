@@ -123,7 +123,7 @@ def main():
         min_fit_clients=SERVER_MIN_FIT_CLIENTS,
         min_evaluate_clients=SERVER_MIN_EVALUATE_CLIENTS,
         min_available_clients=SERVER_MIN_AVAILABLE_CLIENTS,
-        # evaluate_fn=get_evaluate_fn(model, args.toy),
+        evaluate_fn=get_evaluate_fn(model, args.toy),
         on_fit_config_fn=fit_config,
         on_evaluate_config_fn=evaluate_config,
         initial_parameters=fl.common.ndarrays_to_parameters(model_parameters),
